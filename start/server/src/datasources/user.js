@@ -1,10 +1,15 @@
-const { DataSource } = require('apollo-datasource');
-const isEmail = require('isemail');
+const { DataSource } = require("apollo-datasource");
+const isEmail = require("isemail");
 
 class UserAPI extends DataSource {
-  constructor({ store }) {
+  // constructor({ store }) {
+  //   super();
+  //   this.store = store;
+  // }
+
+  constructor({ prisma }) {
     super();
-    this.store = store;
+    this.prisma = prisma;
   }
 
   /**
@@ -66,7 +71,7 @@ class UserAPI extends DataSource {
       where: { userId },
     });
     return found && found.length
-      ? found.map(l => l.dataValues.launchId).filter(l => !!l)
+      ? found.map((l) => l.dataValues.launchId).filter((l) => !!l)
       : [];
   }
 
@@ -77,6 +82,23 @@ class UserAPI extends DataSource {
       where: { userId, launchId },
     });
     return found && found.length > 0;
+  }
+
+  async findOrCreateUserPrisma({ email: emailArg } = {}) {
+    const email =
+      this.context && this.context.user ? this.context.user.email : emailArg;
+    if (!email || !isEmail.validate(email)) return null;
+
+    const user = await this.prisma.user.upsert({ where: { email } });
+    return user ? user : null;
+  }
+
+  async bookTripPrisma({ launchId }) {
+    const userId = this.context.user.id;
+    const res = await this.store.trip.upsert({
+      where: { userId, launchId },
+    });
+    return res ? res.get() : false;
   }
 }
 

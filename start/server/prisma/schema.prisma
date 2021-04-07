@@ -1,0 +1,24 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = "mysql://root:root@127.0.0.1:3306/training_graph"
+}
+
+model User {
+  id Int @id @default(autoincrement())
+  email String
+  token String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model trip {
+  id Int @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  launchId Int
+  userId Int
+}
