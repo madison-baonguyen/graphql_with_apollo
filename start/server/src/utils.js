@@ -1,4 +1,4 @@
-const SQL = require("sequelize");
+// const SQL = require("sequelize");
 const { PrismaClient } = require('@prisma/client')
 
 module.exports.paginateResults = ({

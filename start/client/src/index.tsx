@@ -14,15 +14,15 @@ import Login from "./pages/login";
 
 export const typeDefs = gql`
   extend type Query {
-    isLoggedIn: boolean
-    carItems: [ID!]!
+    isLoggedIn: Boolean!
+    cartItems: [ID!]!
   }
 `;
 
 const IS_LOGGED_IN = gql`
   query IsUserLoggedIn {
     isLoggedIn @client
-  }
+  } 
 `;
 
 function IsLoggedIn() {

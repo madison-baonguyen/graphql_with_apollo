@@ -9,7 +9,8 @@ class UserAPI extends DataSource {
 
   constructor({ prisma }) {
     super();
-    this.prisma = prisma;
+
+    this.prisma = prisma.context.prisma;
   }
 
   /**
@@ -27,53 +28,59 @@ class UserAPI extends DataSource {
    * have to be. If the user is already on the context, it will use that user
    * instead
    */
-  async findOrCreateUser({ email: emailArg } = {}) {
-    const email =
-      this.context && this.context.user ? this.context.user.email : emailArg;
-    if (!email || !isEmail.validate(email)) return null;
+  // async findOrCreateUser({ email: emailArg } = {}) {
+  //   const email =
+  //     this.context && this.context.user ? this.context.user.email : emailArg;
+  //   if (!email || !isEmail.validate(email)) return null;
 
-    const users = await this.store.users.findOrCreate({ where: { email } });
-    return users && users[0] ? users[0] : null;
-  }
+  //   const users = await this.store.users.findOrCreate({ where: { email } });
+  //   return users && users[0] ? users[0] : null;
+  // }
 
   async bookTrips({ launchIds }) {
-    const userId = this.context.user.id;
-    if (!userId) return;
+    try {
+      console.log("===bookTrips", launchIds, this.context.user);
+      const userId = this.context.user.id;
+      console.log("===bookTrips", launchIds, userId);
+      if (!userId) return;
 
-    let results = [];
+      let results = [];
 
-    // for each launch id, try to book the trip and add it to the results array
-    // if successful
-    for (const launchId of launchIds) {
-      const res = await this.bookTrip({ launchId });
-      if (res) results.push(res);
+      // for each launch id, try to book the trip and add it to the results array
+      // if successful
+      for (const launchId of launchIds) {
+        const res = await this.bookTripPrisma({ launchId });
+        if (res) results.push(res);
+      }
+
+      return results;
+    } catch (error) {
+      console.log("=========", error);
     }
-
-    return results;
   }
 
-  async bookTrip({ launchId }) {
-    const userId = this.context.user.id;
-    const res = await this.store.trips.findOrCreate({
-      where: { userId, launchId },
-    });
-    return res && res.length ? res[0].get() : false;
-  }
+  // async bookTrip({ launchId }) {
+  //   const userId = this.context.user.id;
+  //   const res = await this.store.trips.findOrCreate({
+  //     where: { userId, launchId },
+  //   });
+  //   return res && res.length ? res[0].get() : false;
+  // }
 
-  async cancelTrip({ launchId }) {
-    const userId = this.context.user.id;
-    return !!this.store.trips.destroy({ where: { userId, launchId } });
-  }
+  // async cancelTrip({ launchId }) {
+  //   const userId = this.context.user.id;
+  //   return !!this.store.trips.destroy({ where: { userId, launchId } });
+  // }
 
-  async getLaunchIdsByUser() {
-    const userId = this.context.user.id;
-    const found = await this.store.trips.findAll({
-      where: { userId },
-    });
-    return found && found.length
-      ? found.map((l) => l.dataValues.launchId).filter((l) => !!l)
-      : [];
-  }
+  // async getLaunchIdsByUser() {
+  //   const userId = this.context.user.id;
+  //   const found = await this.store.trips.findAll({
+  //     where: { userId },
+  //   });
+  //   return found && found.length
+  //     ? found.map((l) => l.dataValues.launchId).filter((l) => !!l)
+  //     : [];
+  // }
 
   async isBookedOnLaunch({ launchId }) {
     if (!this.context || !this.context.user) return false;
@@ -89,16 +96,58 @@ class UserAPI extends DataSource {
       this.context && this.context.user ? this.context.user.email : emailArg;
     if (!email || !isEmail.validate(email)) return null;
 
-    const user = await this.prisma.user.upsert({ where: { email } });
-    return user ? user : null;
+    const data = { email };
+
+    let user = await this.prisma.user.findMany({
+      where: { email: data.email },
+    });
+
+    user = !user[0]
+      ? await this.prisma.user.create({
+          data: data,
+        })
+      : user[0];
+
+    return user;
   }
 
   async bookTripPrisma({ launchId }) {
     const userId = this.context.user.id;
-    const res = await this.store.trip.upsert({
+    console.log("===launchIds", launchIds, userId);
+    let res;
+    try {
+      res = await this.prisma.trip.upsert({
+        where: { userId, launchId },
+      });
+    } catch (error) {
+      console.log("===error", error);
+    }
+
+    return res ? res.get() : false;
+  }
+
+  async cancelTripPrisma({ launchId }) {
+    const userId = this.context.user.id;
+    return !!this.prisma.trip.delete({ where: { userId, launchId } });
+  }
+
+  async getLaunchIdsByUserPrisma() {
+    const userId = this.context.user.id;
+    const found = await this.prisma.trip.findMany({
+      where: { userId },
+    });
+    return found && found.length
+      ? found.map((l) => l.dataValues.launchId).filter((l) => !!l)
+      : [];
+  }
+
+  async isBookedOnLaunchPrisma({ launchId }) {
+    if (!this.context || !this.context.user) return false;
+    const userId = this.context.user.id;
+    const found = await this.prisma.trip.findMany({
       where: { userId, launchId },
     });
-    return res ? res.get() : false;
+    return found && found.length > 0;
   }
 }
 

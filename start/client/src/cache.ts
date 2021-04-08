@@ -7,12 +7,12 @@ export const cache: InMemoryCache = new InMemoryCache({
         isLoggedIn: {
           read() {
             return isLoggedInVar();
-          },
+          } 
         },
-        carItems: {
+        cartItems: {
           read() {
             return cartItemsVar();
-          },
+          } 
         },
         launches: {
           keyArgs: false,
@@ -35,6 +35,9 @@ export const cache: InMemoryCache = new InMemoryCache({
   },
 });
 
-export const isLoggedInVar = makeVar<boolean>(!!localStorage.getItem("token"));
+// Initializes to true if localStorage includes a 'token' key,
+// false otherwise
+export const isLoggedInVar = makeVar<boolean>(!!localStorage.getItem('token'));
 
+// Initializes to an empty array
 export const cartItemsVar = makeVar<string[]>([]);
