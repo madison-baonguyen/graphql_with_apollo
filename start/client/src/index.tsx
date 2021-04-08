@@ -14,8 +14,8 @@ import Login from "./pages/login";
 
 export const typeDefs = gql`
   extend type Query {
-    isLoggedIn: boolean
-    carItems: [ID!]!
+    isLoggedIn: Boolean!
+    cartItems: [ID!]!
   }
 `;
 
