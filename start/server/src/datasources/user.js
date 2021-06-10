@@ -1,5 +1,6 @@
 const { DataSource } = require("apollo-datasource");
 const isEmail = require("isemail");
+const prisma = new PrismaClient();
 
 class UserAPI extends DataSource {
   // constructor({ store }) {
@@ -10,7 +11,9 @@ class UserAPI extends DataSource {
   constructor({ prisma }) {
     super();
 
-    this.prisma = prisma.context.prisma;
+    // this.prisma = prisma.context.prisma;
+    this.prisma = prisma;
+
   }
 
   /**
